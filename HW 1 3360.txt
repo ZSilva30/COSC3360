@@ -1,0 +1,70 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <iostream>
+#include <sstream>
+#include <cmath>
+#include <vector>
+#include <string>
+using namespace std; 
+
+struct Info {
+    string symbol;
+    string binary_word;
+    double prob;
+    double fx;
+};
+
+void *calculation(void *SYM) {
+   struct Info *InfoPointer = (struct Info *)SYM; // Inputing variables
+//Fbar(x) Formula
+  double fbar = (InfoPointer->prob / 2) + (InfoPointer->fx - InfoPointer->prob);
+// length formula
+    int length = ceil(log2(1.0/InfoPointer->prob)+1);
+   string binary = "";
+  for(int i = 0; i < length; i++) {
+    fbar = fbar * 2;
+    if(fbar >= 1) { binary += '1'; fbar-=1;} 
+    else { binary +='0'; }
+       InfoPointer-> binary_word = binary;
+    }
+}
+
+int main(int argc, char *argv[]) {
+    // Parse inputs here
+    string symbol, prob;
+    Info var;
+    double PNUM;
+    double num;
+    string letter;
+    vector <Info> V;
+     getline(cin, symbol);
+     getline(cin, prob);  
+     stringstream ss(symbol);
+     stringstream ss2(prob); // saves it as a double
+     while ( ss >> letter,ss2 >> PNUM ){ // saving it to the object and pushing it to the vector
+     var.symbol = letter;
+     var.prob = PNUM;
+     V.push_back(var); // pushing back , first element in vector 
+     }
+    // Create f(x) function here
+    for( int i = 0; i < V.size(); i++){
+        num += V[i].prob;
+        V[i].fx = num;
+    }
+        pthread_t tid[V.size()];
+for(int i=0; i < V.size(); i++ ){
+    // calculation(&V[i]);// & means refrence , * means pointer 
+    pthread_create(&tid[i], nullptr, calculation, &V[i]); 
+}
+for (int i = 0; i < V.size(); i++) {
+       pthread_join(tid[i], nullptr);
+    
+}
+    // Print everything here
+   cout << "SHANNON-FANO-ELIAS Codes:\n" << endl;
+   for (int i = 0; i < V.size(); i++) {  // .size() is a function that gives me legnth 
+    cout << "Symbol " << V[i].symbol<< ", Code: " << V[i].binary_word << endl;
+   }
+}
